@@ -1,0 +1,72 @@
+/*{
+    "author": "Mark Patterson",
+    "targets": ["omnifocus"],
+    "type": "action",
+    "identifier": "local.patterson.mark.omnifocus.last_completed",
+    "version": "0.1",
+    "description": "A plug-in that opens the parent of the last completed action",
+    "label": "View parent of last completed action",
+    "mediumLabel": "View parent of last completed action",
+    "paletteLabel": "View last completed",
+}*/
+(() => {
+    var action = new PlugIn.Action(function(selection) {
+        
+        // Find the most recently completed task
+        var last_task = flattenedTasks.reduce((a,b)=>a.completionDate > b.completionDate ? a : b) ;
+        if (!last_task)
+            return ;
+        else if (last_task.project && last_task.project.id.primaryKey == last_task.id.primaryKey) {
+            // Project root task
+            var url = "omnifocus:///task/" + last_task.id.primaryKey ;
+            URL.fromString(url).call(reply=>{}) ;
+            return ;
+        }
+        
+        // Find all parents of the task with a recursive search
+        function find_parents_recursive(objs) {
+            for (var i = 0 ; i < objs.length ; i++) {
+                if (objs[i] == last_task) {
+                    return [objs[i]] ;
+                } else if (objs[i].hasChildren) {
+                    var p = find_parents_recursive(objs[i].children) ;
+                    if (p) {
+                        p.push(objs[i]) ;
+                        return p ;
+                    }
+                }
+            }
+            return null ;
+        }
+        var root ;
+        if (!last_task.containingProject) // inInbox doesn't work for task groups
+            root = inbox ;
+        else
+            root = [last_task.containingProject] ;
+        var parents = find_parents_recursive(root) ;
+        
+        // Choose the lowest remaining parent
+        var target = last_task ;
+        for (var i = 0 ; i < parents.length ; i++) {
+            if (!parents[i].completed) {
+                target = parents[i] ;
+                break ;
+            }
+        }
+        
+        // Navigate to the task parent
+        var url ;
+        if (target.completed && !target.containingProject) {
+            // Omnifocus doesn't automatically display for completed tasks in inbox
+            url = "omnifocus:///inbox" ;
+        } else {
+          console.log(JSON.stringify(selection))
+            document.windows[0].perspective = Perspective.BuiltIn.Projects
+            url = "omnifocus:///task/" + target.id.primaryKey ;
+        }
+        URL.fromString(url).call(reply=>{})
+
+    });
+        
+    return action;
+})();
