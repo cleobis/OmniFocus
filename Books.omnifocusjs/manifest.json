@@ -1,0 +1,22 @@
+{
+  "author": "Mark Patterson",
+  "libraries": [
+    {
+      "identifier": "fast_xml_parser"
+    }
+  ],
+  "identifier": "local.patterson.mark.omnifocus.books",
+  "version": "0.1",
+  "description": "A collection of Omni Automation scripts for interfacing to Goodreads.",
+  "actions": [
+    {
+      "image": "icon.png",
+      "identifier": "aboutThisPlugin"
+    },
+    {
+      "image": "icon.png",
+      "identifier": "lookup_metadata"
+    }
+  ],
+  "defaultLocale": "en"
+}
