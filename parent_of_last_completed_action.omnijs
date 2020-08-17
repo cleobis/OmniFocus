@@ -57,14 +57,13 @@
         // Navigate to the task parent
         var url ;
         if (target.completed && !target.containingProject) {
-            // Omnifocus doesn't automatically display for completed tasks in inbox
+            // Omnifocus doesn't automatically display for completed tasks in inbox sometimes
             url = "omnifocus:///inbox" ;
         } else {
-          console.log(JSON.stringify(selection))
             document.windows[0].perspective = Perspective.BuiltIn.Projects
             url = "omnifocus:///task/" + target.id.primaryKey ;
         }
-        URL.fromString(url).call(reply=>{})
+        URL.fromString(url).open()
 
     });
         
