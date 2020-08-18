@@ -139,7 +139,7 @@ var _ = function(){
         field.nullOptionTitle = "<skip>" ;
         form.addField(field) ;
         return form.show("Select the matching book for \"" + query + ".\" The task will be updated with metadata.", "Update task")
-        .catch(form => {abort = true ; throw new AbortError()})
+        .catch(form => {throw new AbortError()})
       })
       
       // Execution forks here and the next look interation could start while we update the task in the background
