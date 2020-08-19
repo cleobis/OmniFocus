@@ -1,0 +1,76 @@
+/*{
+	"author": "Mark Patterson",
+	"targets": ["omnifocus"],
+	"type": "action",
+	"identifier": "local.patterson.mark.omnifocus.follow_up",
+	"version": "1.0",
+	"description": "Mark the currently selected task as complete and create a task to follow up.",
+	"label": "Complete and follow up",
+	"mediumLabel": "Complete and follow up",
+	"paletteLabel": "Complete and follow up",
+}*/
+// based on https://omni-automation.com/omnifocus/plug-in-complete-await.html
+(() => {
+  "use strict";
+  
+  let action = new PlugIn.Action(function(selection) {
+    (async (selection) => {
+      let duplicatedTasks = new Array()
+      let abort = false;
+      
+      for (let i = 0; i < selection.tasks.length; i++) {
+        let task = selection.tasks[i]
+        if (abort)
+          return;
+        
+        let form = new Form()
+        form.addField(new Form.Field.String("name", "Name", "Follow up on " + task.name));
+        let field = new Form.Field.Option("tag", "Tag",
+          flattenedTags,
+          flattenedTags.map(t => t.name),
+          tagNamed("Waiting")
+        )
+        field.allowsNull = true
+        field.nullOptionTitle = "<None>"
+        form.addField(field);
+        form.addField(new Form.Field.Checkbox("copy", "Copy description", false));
+        form.addField(new Form.Field.Checkbox("view", "View task", false));
+        try {
+          form = await form.show("Create next action", "Create");
+        } catch {
+          abort = true;
+          return;
+        }
+        
+        const new_task = new Task(form.values.name, task.after);
+        if (form.values.tag) {
+          new_task.addTag(form.values.tag);
+        }
+        if (form.values.copy) {
+          new_task.note = task.note;
+        } else {
+          new_task.note = "Follow up on omnifocus:///task/" + task.id.primaryKey + "\n";
+        }
+        // dupTasks = duplicateTasks([task], insertionLocation) // maybe better
+
+        task.markComplete();
+
+        if (form.values.view) {
+          URL.fromString("omnifocus:///task/" + idStr).open()
+          abort = true;
+        }
+
+      }
+    })(selection)
+    .catch(err => {
+      console.log("Error:\n" + err.message)
+    });
+  });
+
+
+  action.validate = function(selection) {
+    return (selection.tasks.length >= 1)
+  };
+
+  return action;
+})();

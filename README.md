@@ -5,6 +5,9 @@ Personal repository of [Automation](https://omni-automation.com) plug-ins for [O
 ## parent\_of\_last\_completed\_action.omnijs
 After completing a task, run this action to navigate to the parent project or remaining parent task group in the Projects perspective.
 
+## Complete\_and\_create\_next\_action.omnijs
+Mark a task complete and display a form for creating a follow-up action.
+
 ## Books.omnifocusjs
 In progress plugin for working with a reading list of books. The lookup metadata action will search Goodreads for the task name, prompt the user to review the matches, and then update the task with book metadata. Additional sources such as your local library can be checked and the task annotated with a tag or keyword in the name if the library has it available.
 
