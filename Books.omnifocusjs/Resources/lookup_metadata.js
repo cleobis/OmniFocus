@@ -91,7 +91,9 @@ var _ = function(){
     const lookup_tags = lookups.flatMap(l => l.tag ? [l.tag] : [])
     
     
-    selection.tasks.forEach(task => {
+    for (let i_task = 0 ; i_task < selection.tasks.length ; i_task++) {
+      const task = selection.tasks[i_task] ;
+      
       let book // Data sharing within then() clauses.
       
       // Lookup the book on Goodreads
@@ -229,7 +231,7 @@ var _ = function(){
         console.log(str)
         return "Error processing task " + task.name + ":\n" + err
       }))
-    });
+    }
     
     Promise.all(all_tasks).then(msgs => {
       console.log(JSON.stringify(msgs))
