@@ -70,8 +70,9 @@ var _ = function(){
       }),
     
       new Lookup("CPL", book => {
-        let url = `((title:(${book.title}) OR title:(${book.original_title})) AND contributor:(${book.author}) )` ;
-        url = "https://chipublib.bibliocommons.com/v2/search?custom_edit=undefined&query=" + encodeURIComponent(url) + "&searchType=bl&suppress=true" ;
+        let url = (book.title == book.original_title) ? `title:(${book.title})` : `(title:(${book.title}) OR title:(${book.original_title}))`;
+        url = `(${url} AND contributor:(${book.author}))` ;
+        url = "https://chipublib.bibliocommons.com/v2/search?custom_edit=false&query=" + encodeURIComponent(url) + "&searchType=bl&suppress=true" ;
         return urlFetchPromise(URL.fromString(url)).then(ret => {
           const str = ret.toString()
           let found ;
