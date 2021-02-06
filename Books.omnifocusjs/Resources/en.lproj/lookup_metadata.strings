@@ -1,4 +1,4 @@
-"label" = "Lookup metadata...";
-"shortLabel" = "Lookup";
+"label" = "Lookup metadata";
+"shortLabel" = "Lookup book";
 "mediumLabel" = "Lookup book";
-"longLabel" = "Lookup metadata for book and update task";
+"longLabel" = "Lookup book metadata for book and update task";

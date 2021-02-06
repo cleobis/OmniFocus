@@ -1,4 +1,4 @@
-"label" = "About this PlugIn…";
-"shortLable" = "About";
-"mediumLable" = "About PlugIn…";
+"label" = "About this PlugIn";
+"shortLabel" = "About";
+"mediumLabel" = "About PlugIn";
 "longLabel" = "Information about this PlugIn";
