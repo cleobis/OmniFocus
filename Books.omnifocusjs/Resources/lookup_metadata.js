@@ -99,7 +99,7 @@ var _ = function(){
       
       // Lookup the book on Goodreads
       // Remove "Read" prefix and [...] suffix from the task name to use as the query
-      const query = task.name.replace(/^\s*Read\s/, "").replace(/ \[[^\]].+\]$/, "") ; 
+      const query = task.name.replace(/^\s*(Read|Waiting|Pickup|Reading|Return)\s/, "").replace(/ \[[^\]].+\]$/, "") ; 
       const u = URL.fromString("https://www.goodreads.com/search/index.xml?key=" + GOODREADS_API_KEY + "&q=" + encodeURIComponent(query));
       const fetch_promise = urlFetchPromise(u) ;
 
