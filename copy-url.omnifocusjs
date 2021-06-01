@@ -1,0 +1,43 @@
+/*{
+	"author": "Mark Patterson",
+	"targets": ["omnifocus"],
+	"type": "action",
+	"identifier": "local.patterson.mark.omnifocus.copy_url",
+	"version": "1.0",
+	"description": "Copy the URL of the currently selected tasks to the clipboard.",
+	"label": "Copy URL",
+	"mediumLabel": "Copy URL",
+	"paletteLabel": "Copy URL",
+    "image": "link",
+}*/
+(() => {
+  "use strict";
+  
+  let action = new PlugIn.Action(function(selection) {
+    
+      let urls = new Array();
+      
+      for (let i = 0; i < selection.allObjects.length; i++) {
+        let obj = selection.allObjects[i];
+        
+        if ((obj instanceof Task) || (obj instanceof Project)) {
+            urls.push(URL.fromString("omnifocus:///task/" + obj.id.primaryKey));
+        } else if (obj instanceof Folder) {
+             urls.push(URL.fromString("omnifocus:///folder/" + obj.id.primaryKey));
+        } else if (obj instanceof Tag) {
+            urls.push(URL.fromString("omnifocus:///context/" + obj.id.primaryKey));
+        }
+      }
+      Pasteboard.general.URLs = urls;
+  });
+
+
+  action.validate = function(selection) {
+    return (selection.tasks.length >= 1 
+        || selection.projects.length >= 1 
+        || selection.folders.length >= 1 
+        || selection.tags.length >= 1)
+  };
+
+  return action;
+})();
