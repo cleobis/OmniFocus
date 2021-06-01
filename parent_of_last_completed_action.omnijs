@@ -8,6 +8,7 @@
     "label": "View parent of last completed action",
     "mediumLabel": "View parent of last completed action",
     "paletteLabel": "View last completed",
+    "image": "arrowshape.turn.up.backward.fill",
 }*/
 (() => {
     var action = new PlugIn.Action(function(selection) {

@@ -8,6 +8,7 @@
 	"label": "Complete and follow up",
 	"mediumLabel": "Complete and follow up",
 	"paletteLabel": "Complete and follow up",
+	"image": "checkmark.circle",
 }*/
 // based on https://omni-automation.com/omnifocus/plug-in-complete-await.html
 (() => {
