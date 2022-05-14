@@ -13,10 +13,10 @@
 (() => {
 	const action = new PlugIn.Action(function(selection, sender){
 		(async() => {
-			await new Alert("Process Inbox", "Based upon a concept by Scotty Jackson.").show()
-			var inboxCount = inbox.length
-			var taskIDs = inbox.map(task => task.id.primaryKey)
-			
+			// await new Alert("Process Inbox", "Based upon a concept by Scotty Jackson.").show()
+			const taskIDs = inbox.filter(task => !task.completed).map(task => task.id.primaryKey)
+			const inboxCount = taskIDs.length
+						
 			var masterOperationsList = ["Rename", "Assign to Project", "Assign Tag", "Set Defer Date", "Set Due Date", "Flag/UnFlag", "Add/Edit Note", "Complete", "Drop"]
 			var masterOperationIndexes = new Array()
 			masterOperationsList.forEach((item, index) => {masterOperationIndexes.push(index)})
@@ -352,7 +352,7 @@
 
 	action.validate = function(selection, sender){
 		// validation code
-		return (inbox.length > 0)
+		return (inbox.filter(task => !task.completed).length > 0)
 	};
 	
 	return action;
