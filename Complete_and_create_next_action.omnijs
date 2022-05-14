@@ -26,9 +26,10 @@
         
         let form = new Form()
         form.addField(new Form.Field.String("name", "Name", "Follow up on " + task.name));
+        const tags = flattenedTags.filter(t => t.Status != Tag.Status.Dropped)
         let field = new Form.Field.Option("tag", "Tag",
-          flattenedTags,
-          flattenedTags.map(t => t.name),
+          tags,
+          tags.map(t => t.name),
           tagNamed("Waiting")
         )
         field.allowsNull = true
