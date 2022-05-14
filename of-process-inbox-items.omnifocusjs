@@ -1,0 +1,359 @@
+/*{
+	"type": "action",
+	"targets": ["omnifocus"],
+	"author": "Otto Automator",
+	"identifier": "com.omni-automation.of.process-inbox",
+	"version": "1.0",
+	"description": "A plug-in that performs operations with the contents of the inbox.",
+	"label": "Process Inbox",
+	"shortLabel": "Process Inbox",
+	"paletteLabel": "Process Inbox",
+	"image": "gearshape.fill"
+}*/
+(() => {
+	const action = new PlugIn.Action(function(selection, sender){
+		(async() => {
+			await new Alert("Process Inbox", "Based upon a concept by Scotty Jackson.").show()
+			var inboxCount = inbox.length
+			var taskIDs = inbox.map(task => task.id.primaryKey)
+			
+			var masterOperationsList = ["Rename", "Assign to Project", "Assign Tag", "Set Defer Date", "Set Due Date", "Flag/UnFlag", "Add/Edit Note", "Complete", "Drop"]
+			var masterOperationIndexes = new Array()
+			masterOperationsList.forEach((item, index) => {masterOperationIndexes.push(index)})
+			console.log("masterOperationIndexes", JSON.stringify(masterOperationIndexes))
+			
+			var i;
+			for (i = 0; i < taskIDs.length; i++) {
+					console.log(i) 
+					
+					var taskID = taskIDs[i]
+					var task = Task.byIdentifier(taskID)
+					var taskName = task.name
+					
+					console.log(taskName, taskID)
+
+					// PROMPT USER FOR TASK PROCSSSING					
+					var alertTitle = "CONFIRM"
+					var alertMessage = `TASK (${i + 1}/${inboxCount}): ${taskName}`
+					var alert = new Alert(alertTitle, alertMessage)
+					alert.addOption("Process")
+					alert.addOption("Skip")
+					alert.addOption("Stop")
+					var buttonIndex = await alert.show()
+					console.log("button", buttonIndex)
+					if(buttonIndex === 1){continue}
+					if(buttonIndex === 2){throw "user canceled"}
+					console.log("choose processing options")
+			
+					// PROCESSING OPTIONS
+					var inputForm = new Form()
+			
+					var taskPrompt = "Processing options:"
+					var multiOptionMenu = new Form.Field.MultipleOptions(
+						"operationsKey",
+						taskPrompt,
+						masterOperationIndexes,
+						masterOperationsList,
+						[]
+					)
+		
+					inputForm.addField(multiOptionMenu)
+					
+					inputForm.validate = function(){return true}
+					
+					var formMessage = `TASK (${i + 1}/${inboxCount}): ${taskName}`
+					var formButton = "Process"
+					var formObject = await inputForm.show(formMessage,formButton)
+			
+					var taskOperationIndexes = formObject.values['operationsKey']
+					console.log("taskOperationIndexes", JSON.stringify(taskOperationIndexes))
+					
+					
+					// RENAME TASK
+					if(taskOperationIndexes.includes(0)){
+						console.log("RENAME", taskID)
+						var namingForm = new Form()
+						var nameInputField = new Form.Field.String(
+							"newName",
+							"Name",
+							taskName,
+							null
+						)
+						namingForm.addField(nameInputField)
+						namingForm.validate = function(namingFormObj){
+							newName = namingFormObj.values["newName"]
+							if(!newName){return false}
+							return (newName.length > 0)?true:false
+						}
+						var formMessage = "Enter new name for task:"
+						var formButtonTitle = "Rename"
+						namingFormObj = await namingForm.show(formMessage, formButtonTitle)
+						newName = namingFormObj.values["newName"]
+						task.name = newName
+						taskName = newName
+					}
+					
+					
+					// ASSIGN TO PROJECT
+					if(taskOperationIndexes.includes(1)){
+						console.log("ASSIGN TO PROJECT", taskID)
+						var projectSearchForm = new Form()
+						var textInputField = new Form.Field.String(
+							"targetProjectName",
+							null,
+							null,
+							null
+						)
+						projectSearchForm.addField(textInputField)
+						projectSearchForm.validate = function(searchFormObj){
+							targetProjectName = searchFormObj.values["targetProjectName"]
+							if(!targetProjectName){return false}
+							return (targetProjectName.length > 0)?true:false
+						}
+						var formMessage = "Search for project:"
+						var formButtonTitle = "Search"
+						var projectSearchFormObj = await projectSearchForm.show(formMessage, formButtonTitle)
+						var targetProjectName = projectSearchFormObj.values["targetProjectName"]
+						var projectSearchResults = projectsMatching(targetProjectName)
+						console.log("projectSearchResults", projectSearchResults)
+						console.log("projectSearchResults.length", projectSearchResults.length)
+						if(projectSearchResults.length === 0){
+							var projectNamingForm = new Form()
+							var textInputField = new Form.Field.String(
+								"targetProjectName",
+								null,
+								null,
+								null
+							)
+							projectNamingForm.addField(textInputField)
+							projectNamingForm.validate = function(searchFormObj){
+								targetProjectName = searchFormObj.values["targetProjectName"]
+								if(!targetProjectName){return false}
+								return (targetProjectName.length > 0)?true:false
+							}
+							var formMessage = "No matches, enter name for new project:"
+							var formButtonTitle = "Create"
+							var projectNamingFormObj = await projectNamingForm.show(formMessage, formButtonTitle)
+							var targetProjectName = projectNamingFormObj.values["targetProjectName"]
+							var project = new Project(targetProjectName)
+							moveTasks([task], project)
+						} else if (projectSearchResults.length === 1){
+							moveTasks([task], projectSearchResults[0])
+						} else {
+							// get names of matching projectSearchForm
+							var projectTitles = projectSearchResults.map(project => project.name)
+							var projectIndexes = projectTitles.map((project, index) => {return index})
+							var projectAssignmentForm = new Form()
+							var projectsMenu = new Form.Field.Option(
+								"matchingProject", 
+								null, 
+								projectIndexes, 
+								projectTitles, 
+								0
+							)							
+							projectAssignmentForm.addField(projectsMenu)
+							projectAssignmentForm.validate = function(){return true}
+							var formMessage = "Select matching project:"
+							var formButtonTitle = "Add Task"
+							var projectAssignmentFormObj = await projectAssignmentForm.show(formMessage, formButtonTitle)
+							var targetProjectIndex = projectAssignmentFormObj.values["matchingProject"]
+							var parentProject = projectSearchResults[targetProjectIndex]
+							moveTasks([task], parentProject)
+						}
+					}
+					
+					// ASSIGN TAG
+					if(taskOperationIndexes.includes(2)){
+						console.log("ASSIGN TAGS", taskID)
+						var tagTitles = flattenedTags.map(tag => tag.name)
+						var tagIDs = flattenedTags.map(tag => tag.id.primaryKey)
+						var tagIndexes = tagTitles.map((title, index) => {return index})
+						if(tagTitles.length > 0){
+							var tagOptionsForm = new Form()
+							var multiOptionMenu = new Form.Field.MultipleOptions(
+								"tagTitles",
+								null,
+								tagIndexes,
+								tagTitles,
+								[]
+							)
+							tagOptionsForm.addField(multiOptionMenu)
+							var formMessage = "Select the tags to assign:"
+							var formButtonTitle = "Add Tags"
+							var tagOptionsFormObj = await tagOptionsForm.show(formMessage, formButtonTitle)
+							task.clearTags()
+							var targetTagsIndexes = tagOptionsFormObj.values["tagTitles"]
+							targetTagsIndexes.forEach(tagIndex => {
+								var tag = Tag.byIdentifier(tagIDs[tagIndex])
+								task.addTag(tag)
+							})
+						} else {
+							// create new tag
+							var tagCreationForm = new Form()
+							var textInputField = new Form.Field.String(
+								"newTagName",
+								null,
+								null,
+								null
+							)
+							tagCreationForm.addField(textInputField)
+							tagCreationForm.validate = function(searchFormObj){
+								var newTagName = searchFormObj.values["newTagName"]
+								if(!newTagName){return false}
+								return (newTagName.length > 0)?true:false
+							}
+							var formMessage = "No tags. Enter new tag:"
+							var formButtonTitle = "Create"
+							var tagCreationFormObj = await tagCreationForm.show(formMessage, formButtonTitle)
+							task.clearTags()
+							var newTagName = tagCreationFormObj.values["newTagName"]
+							task.addTag(new Tag(newTagName))
+						}
+					}
+					
+					// SET DEFER DATE
+					if(taskOperationIndexes.includes(3)){
+						console.log("SET DEFER DATE", taskID)
+						var defermentForm = new Form()
+						var defermentDateInput = new Form.Field.Date(
+							"defermentDate",
+							null,
+							task.deferDate,
+							null
+						)					
+						defermentForm.addField(defermentDateInput)
+						var formMessage = "Enter defer date:"
+						var formButtonTitle = "Add Date"
+						var defermentFormObj = await defermentForm.show(formMessage, formButtonTitle)
+						var defermentDate = defermentFormObj.values["defermentDate"]
+						if(defermentDate){
+							task.deferDate = defermentDate
+						} else {
+							task.deferDate = null
+						}
+					}
+					
+					// SET DUE DATE
+					if(taskOperationIndexes.includes(4)){
+						console.log("SET DUE DATE", taskID)
+						var dueForm = new Form()
+						var dueDateInput = new Form.Field.Date(
+							"taskDueDate",
+							null,
+							task.dueDate,
+							null
+						)
+						dueForm.addField(dueDateInput)
+						dueForm.validate = function(dueFormObj){
+							var temptDueDate = dueFormObj.values["taskDueDate"]
+							if(temptDueDate){
+								if(task.deferDate >= temptDueDate){throw "Due date must come after defer date."}
+							}
+							return true
+						}
+						var formMessage = "Enter due date:"
+						var formButtonTitle = "Add Date"
+						var dueFormObj = await dueForm.show(formMessage, formButtonTitle)
+						var taskDueDate = dueFormObj.values["taskDueDate"]
+						if(taskDueDate){
+							task.dueDate = taskDueDate
+						} else {
+							task.dueDate = null
+						}
+					}
+					
+					// SET FLAG
+					if(taskOperationIndexes.includes(5)){
+						console.log("SET FLAG", taskID)
+						var flagStatus = task.flagged
+						var alertTitle = (flagStatus)? "Task Flagged":"Task Not Flagged"
+						var alertMessage = "Choose flag status:"
+						var alert = new Alert(alertTitle, alertMessage)
+						alert.addOption("Flag")
+						alert.addOption("Un-Flag")
+						var flagOptionAlertButtonIndex = await alert.show()
+						if(flagOptionAlertButtonIndex === 0){
+							task.flagged = true
+						} else {
+							task.flagged = false
+						}
+					}
+					
+					// SET NOTE
+					if(taskOperationIndexes.includes(6)){
+						console.log("SET NOTE", taskID)
+						var noteForm = new Form()
+						var taskNote = task.note
+						var noteTextInputField = new Form.Field.String(
+							"taskNote",
+							null,
+							taskNote,
+							null
+						)
+						var shouldAppendSwitch = new Form.Field.Checkbox(
+							"shouldAppendToNote",
+							"Append to existing note",
+							null
+						)
+						noteForm.addField(noteTextInputField)
+						noteForm.addField(shouldAppendSwitch)
+						var formMessage = "Enter task note:"
+						var formButtonTitle = "Add"
+						var noteFormObj = await noteForm.show(formMessage, formButtonTitle)
+						var newNote = noteFormObj.values["taskNote"]
+						var shouldAppendToNote = noteFormObj.values["shouldAppendToNote"]
+						if (newNote === null || newNote === undefined){
+							newNote = ""
+						}
+						if(shouldAppendToNote){
+							task.appendStringToNote(newNote)
+						} else {
+							task.note = newNote
+						}
+					}
+					
+					// COMPLETE
+					if(taskOperationIndexes.includes(7)){
+						console.log("SET COMPLETE", taskID)
+						var completionStatus = task.completed
+						var alertTitle = (completionStatus)? "Task Completed":"Task Incomplete"
+						var alertMessage = "Choose completion status:"
+						var alert = new Alert(alertTitle, alertMessage)
+						alert.addOption("Mark Completed")
+						alert.addOption("Mark Incomplete")
+						var flagOptionAlertButtonIndex = await alert.show()
+						if(flagOptionAlertButtonIndex === 0){
+							task.markComplete()
+						} else {
+							task.markIncomplete()
+						}
+					}
+					
+					// DROP
+					if(taskOperationIndexes.includes(8)){
+						console.log("SET DROP", taskID)
+						var dropStatus = (task.dropDate) ? true:false
+						console.log("dropStatus", dropStatus)
+						var alertTitle = (dropStatus) ? "Task Dropped":"Task Not Dropped"
+						var alertMessage = "Choose drop status:"
+						var alert = new Alert(alertTitle, alertMessage)
+						alert.addOption("Drop Task")
+						alert.addOption("Un-Drop Task")
+						var dropStatusAlertButtonIndex = await alert.show()
+						if(dropStatusAlertButtonIndex === 0){
+							task.drop(true)
+						} else {
+							task.active = true
+						}
+					}
+			}
+		})().catch(err => console.error(err.message))
+	});
+
+	action.validate = function(selection, sender){
+		// validation code
+		return (inbox.length > 0)
+	};
+	
+	return action;
+})();
