@@ -10,9 +10,10 @@ var _ = function() {
   const states = [
     new BookState("Read", "List", "A book you would like to read"),
     new BookState("Waiting", "Waiting", "A book you have ordered and are waiting to arrive"),
-    new BookState("Pickup", "Errands", "A book that needs to be picked up from the library"),
+    new BookState("Pickup", "Errands", "Pickup from the library"),
     new BookState("Reading", "Reading", "A book you are reading"),
-    new BookState("Return", "Errands", "A book to be returned to the library")
+    new BookState("Return", "Errands", "To be returned to the library"),
+    new BookState("Summarize", "Online reading", "Write review or summary of the book")
   ];
 
   const state_names = states.map(a => a.name);
