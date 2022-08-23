@@ -1,0 +1,65 @@
+/*{
+	"type": "action",
+	"targets": ["omnifocus"],
+	"author": "Mark Patterson",
+	"identifier": "local.patterson.mark.obsidian-page",
+	"version": "1.0",
+	"description": "Create or open an Obsidian page for the selected project.\n\nIf an Obsidian URL is found in the note of the selected project (or parent project for selected task), the URL is opened. If a URL is not found, a new Obsidian page is created and its URL added to the project note.",
+	"label": "Open in Obsidian",
+	"shortLabel": "Obsidian",
+	"paletteLabel": "Obsidian",
+	"image": "doc.richtext"
+}*/
+(() => {
+	var action = new PlugIn.Action(function(selection, sender){
+		const vault = "Obsidian" ;
+		const folder = "Active Projects"
+	
+		// Get the selected project
+		const project = (selection.projects.length >= 1) ? selection.projects[0] : selection.tasks[0].containingProject ;
+		
+		// Do we already have a url?
+		let note = project.note ;
+		const pattern = /(obsidian:\/\/[A-Za-z0-9-._~:\/?#[\]@!$&'()*+,;%=]+)\b/ ;
+		const match = note.match(pattern) ;
+		let url = null ;
+		if (match) {
+			url = URL.fromString(match[0]) ;
+		}
+		
+		// Create the URL if needed
+		if (!url) {
+			let file = folder ;
+			if (file.slice(file.length-1) != "/") {
+				file += "/" ;
+			}
+			file += project.name ;
+			file += " (" + new Date().getFullYear() + ")" ;
+			file = encodeURIComponent(file) ;
+			
+			let content = "# " + project.name + "\n\n"
+			content += "[OmniFocus project](omnifocus://task/" + project.id.primaryKey + ")\n\n"
+			
+			const openURL = "obsidian://open?vault=" + encodeURIComponent(vault) + "&file=" + file ;
+			const newURL  = "obsidian://new?vault="  + encodeURIComponent(vault) + "&file=" + file + "&content=" + encodeURIComponent(content);
+			
+			// Add to note
+			if (note) {
+				note += "\n" ;
+			}
+			note += openURL ;
+			project.note = note ;
+			
+			url = URL.fromString(newURL) ;
+		}
+		
+		console.log(url)
+		url.open()
+	});
+
+	action.validate = function(selection, sender){
+		return selection.projects.length >= 1 || selection.tasks.length >= 1 && !!selection.tasks[0].containingProject ;
+	};
+	
+	return action;
+})();

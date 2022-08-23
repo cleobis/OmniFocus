@@ -24,3 +24,6 @@ And the task is updated, including with an indication it is available at the lib
 
 # toggle_project_status.omnifocusjs
 Move projects between active, background, and on hold folders, changing status, but not moving window to new location.
+
+# obsidian-page.omnifocusjs
+Create or open an Obsidian page for the selected project.
