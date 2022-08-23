@@ -1,0 +1,50 @@
+/*{
+	"type": "action",
+	"targets": ["omnifocus"],
+	"author": "Mark Patterson",
+	"identifier": "local.patterson.mark.toggle_project_status",
+	"version": "1.0",
+	"description": "Move projects between active, background, and on hold folders, changing status, but not moving window to new location.",
+	"label": "Toggle project status",
+	"shortLabel": "Toggle status"
+}*/
+(() => {
+	var action = new PlugIn.Action(function(selection, sender){
+		const projects = selection.projects ;
+		
+		const lookup = [
+			{name: "Active", folder: folderNamed("Projects"), status: Project.Status.Active},
+			{name: "Background", folder: folderNamed("Background projects"), status: Project.Status.Active},
+			{name: "On hold", folder: folderNamed("On Hold Projects"), status: Project.Status.OnHold},
+			{name: "Complete", folder: null, status: Project.Status.Done}
+		];
+		/*lookup.forEach(d => {
+			console.log("name = " + d.name + ", folder = " + d.folder + ", status = " + d.status);
+		});*/
+		
+		// Choose recommended status. Toggle between active and on hold based on first project.
+		const defaultOption = (projects[0].status == Project.Status.Active) ? lookup[2] : lookup[0] ;
+		
+		// Show form
+		var inputForm = new Form()
+		inputForm.addField(new Form.Field.Option("option", "Status", lookup, lookup.map(l=>l.name), defaultOption));
+		const projectNames = projects.map(p => p.name).join(", ") + "." ;
+		inputForm.show("Select new status for " + projectNames, "Apply")
+		
+		// Apply result
+		.then(form => {
+			const opt = form.values["option"];
+			projects.forEach(p => {p.status = opt.status}) ;
+			if (opt.folder) {
+				moveSections(projects, opt.folder) ;
+			}
+		})
+	});
+
+	action.validate = function(selection, sender){
+		// selection options: tasks, projects, folders, tags
+		return (selection.projects.length > 0)
+	};
+	
+	return action;
+})();

@@ -21,4 +21,6 @@ Select the match:
 
 And the task is updated, including with an indication it is available at the library:
 ![And the task is updated, including with an indication it is available at the library](docs/img3.png)
- 
+
+# toggle_project_status.omnifocusjs
+Move projects between active, background, and on hold folders, changing status, but not moving window to new location.
