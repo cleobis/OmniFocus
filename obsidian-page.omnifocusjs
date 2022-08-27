@@ -33,7 +33,7 @@
 			if (file.slice(file.length-1) != "/") {
 				file += "/" ;
 			}
-			file += project.name ;
+			file += project.name.replace("/","-") ;
 			file += " (" + new Date().getFullYear() + ")" ;
 			file = encodeURIComponent(file) ;
 			
