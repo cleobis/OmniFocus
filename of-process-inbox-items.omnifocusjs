@@ -352,7 +352,9 @@
 
 	action.validate = function(selection, sender){
 		// validation code
-		return (inbox.filter(task => !task.completed).length > 0)
+		return true;
+		return inbox.some(task => !task.completed);
+		// return inbox.length > 0;
 	};
 	
 	return action;
