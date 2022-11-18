@@ -68,11 +68,38 @@ var _ = function(){
       new Lookup("Goodreads", book => {
         return Promise.resolve([true, book.url])
       }),
-    
+
       new Lookup("CPL", book => {
-        let url = (book.title == book.original_title) ? `title:(${book.title})` : `(title:(${book.title}) OR title:(${book.original_title}))`;
-        url = `(${url} AND contributor:(${book.author}))` ;
-        url = "https://chipublib.bibliocommons.com/v2/search?custom_edit=false&query=" + encodeURIComponent(url) + "&searchType=bl&suppress=true" ;
+        // Build title search
+        // Looking up by ISBN is unreliable when there are multiple editions. 
+        // Need to search by:
+        //  - title.
+        //  - If there is a subtitle, try stripping it off the title.
+        //  - Optional original_title which may be different from title.
+        let title_query = [`title:(${book.title})`];
+        if (book.title.indexOf(":") >= 0) {
+          title_query.push(`title:(${book.title.split(":")[0]})`);
+        }
+        if (book.original_title && book.title != book.original_title) {
+          title_query.push(`title:(${book.original_title})`);
+          if (book.original_title.indexOf(":") >= 0) {
+            const title_part = `title:(${book.original_title.split(":")[0]})`;
+            if (title_query.indexOf(title_part) == -1) {
+              title_query.push(title_part);
+            }
+          }
+        }
+        let url = "";
+        if (title_query.length == 1) {
+          url = title_query;
+        } else {
+          url = "(" + title_query.join(" OR ") + ")";
+        }
+        
+        // Finish building url with author.
+        url = `(${url} AND contributor:(${book.author}))`;
+        url = "https://chipublib.bibliocommons.com/v2/search?custom_edit=false&query=" + encodeURIComponent(url) + "&searchType=bl&suppress=true";
+        
         return urlFetchPromise(URL.fromString(url)).then(ret => {
           const str = ret.toString()
           let found ;
@@ -145,7 +172,7 @@ var _ = function(){
         .catch(form => {throw new AbortError()})
       })
       
-      // Execution forks here and the next look interation could start while we update the task in the background
+      // Execution forks here and the next look interaction could start while we update the task in the background
       
       all_tasks.push(prev_task_promise.then(form => {
         // Process user selection and query for more info
@@ -177,7 +204,6 @@ var _ = function(){
         
       }).then(lookup_results => {
         // Update the task description
-        console.log("Updating description")
         let desc = task.note.replace(/\n?~~~ Automatic content below ~~~(.|\n)*$/,"")
         if (desc)
           desc += "\n" ;
