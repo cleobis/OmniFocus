@@ -58,7 +58,8 @@
         task.markComplete();
 
         if (form.values.view) {
-          URL.fromString("omnifocus:///task/" + idStr).open()
+          URL.fromString("omnifocus:///projects").open() ; // Force viewing the task in project view. Avoid hidden tasks for tags on hold.
+          URL.fromString("omnifocus:///task/" + new_task.id.primaryKey).open() ;
           abort = true;
         }
 
