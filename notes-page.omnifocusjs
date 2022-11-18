@@ -1,0 +1,84 @@
+/*{
+	"type": "action",
+	"targets": ["omnifocus"],
+	"author": "Mark Patterson",
+	"identifier": "local.patterson.mark.notes-page",
+	"version": "1.0",
+	"description": "Create or open a Notes note for the selected project.\n\nIf a Notes or Obsidian URL is found in the note of the selected project (or parent project for selected task), the URL is opened. If a URL is not found, a new note is created and its URL added to the project note.\n\nRequires the New note with link and Bubble Gum shortcuts to be installed.",
+	"label": "Open in Notes",
+	"shortLabel": "Notes",
+	"paletteLabel": "Notes",
+	"image": "note.text"
+}*/
+(() => {
+	var action = new PlugIn.Action(function(selection, sender){
+		// Get the selected project
+		const project = (selection.projects.length >= 1) ? selection.projects[0] : selection.tasks[0].containingProject ;
+		
+		// Do we already have a url to obsidian?
+		let note = project.note ;
+		const pattern = /(obsidian:\/\/[A-Za-z0-9-._~:\/?#[\]@!$&'()*+,;%=]+)\b/ ;
+		const match = note.match(pattern) ;
+		let url = null ;
+		if (match) {
+			url = URL.fromString(match[0]) ;
+		}
+		
+		// Do we already have a url to Apple Notes via bubblegum?
+		const pattern_note = /(shortcuts:\/\/run-shortcut\?name=Bubble%20Gum&[A-Za-z0-9-._~:\/?#[\]@!$&'()*+,;%=]+)\b/ ;
+		const match_note = note.match(pattern_note) ;
+		if (match_note) {
+			url = URL.fromString(match_note[0]) ;
+		}
+		
+		// Create the URL if needed
+		if (!url) {
+			let date = new Date().toISOString() ;
+			date = date.substring(0, date.indexOf("T")) ;
+			let content = `${project.name}
+
+---
+created: ${date}
+omnifocus_id: ${project.id.primaryKey}
+---
+
+omnifocus://task/${project.id.primaryKey}
+
+`
+			const newURL  = "shortcuts://run-shortcut?name=New%20note%20with%20link&input=" + encodeURIComponent(content);
+			
+			URL.fromString(newURL).call(function (text) {
+				console.log("URL callback received:\n  " + text) ;
+				
+				// Add to note
+				note = project.note ; // Refresh value since running asynchronously.
+				if (note) {
+					note += "\n" ;
+				}
+				note += text ;
+				project.note = note ;
+				
+				// Open note
+				const openURL = text.match(pattern_note) ;
+				if (openURL) {
+					URL.fromString(openURL[0]).open() ;
+				}
+			}, function (error) {
+				const msg = `Error ${error.errorCode} creating note:\n${error.errorMessage}`
+				console.error(msg) ;
+				new Alert("Error creating note", msg).show() ;
+				
+			}) ;
+			
+			return ;
+		}
+		console.log(url)
+		url.open()
+	});
+
+	action.validate = function(selection, sender){
+		return selection.projects.length >= 1 || selection.tasks.length >= 1 && !!selection.tasks[0].containingProject ;
+	};
+	
+	return action;
+})();

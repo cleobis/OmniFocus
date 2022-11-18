@@ -25,5 +25,7 @@ And the task is updated, including with an indication it is available at the lib
 # toggle_project_status.omnifocusjs
 Move projects between active, background, and on hold folders, changing status, but not moving window to new location.
 
-# obsidian-page.omnifocusjs
-Create or open an Obsidian page for the selected project.
+# obsidian-page.omnifocusjs and notes-page.omnifocusjs
+Create or open an Obsidian or Apple Notes note for the selected project.
+
+The Apple Notes action requires my shortcut [New note with link](https://www.icloud.com/shortcuts/0794d8e83d5543d3b515e9eef0a8de47) and Scotty J's [Bubble Gum](https://heyscottyj.com/2021/05/25/sticking-stuff-together-with-bubble-gum/).

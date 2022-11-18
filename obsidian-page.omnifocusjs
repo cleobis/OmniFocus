@@ -18,13 +18,20 @@
 		// Get the selected project
 		const project = (selection.projects.length >= 1) ? selection.projects[0] : selection.tasks[0].containingProject ;
 		
-		// Do we already have a url?
+		// Do we already have a url to obsidian?
 		let note = project.note ;
 		const pattern = /(obsidian:\/\/[A-Za-z0-9-._~:\/?#[\]@!$&'()*+,;%=]+)\b/ ;
 		const match = note.match(pattern) ;
 		let url = null ;
 		if (match) {
 			url = URL.fromString(match[0]) ;
+		}
+		
+		// Do we already have a url to Apple Notes via bubblegum?
+		const pattern_note = /(shortcuts:\/\/run-shortcut\?name=Bubble%20Gum&[A-Za-z0-9-._~:\/?#[\]@!$&'()*+,;%=]+)\b/ ;
+		const match_note = note.match(pattern_note) ;
+		if (match_note) {
+			url = URL.fromString(match_note[0]) ;
 		}
 		
 		// Create the URL if needed
@@ -34,11 +41,22 @@
 				file += "/" ;
 			}
 			file += project.name.replace("/","-") ;
-			file += " (" + new Date().getFullYear() + ")" ;
+			// file += " (" + new Date().getFullYear() + ")" ;
 			file = encodeURIComponent(file) ;
 			
-			let content = "# " + project.name + "\n\n"
-			content += "[OmniFocus project](omnifocus://task/" + project.id.primaryKey + ")\n\n"
+			let date = new Date().toISOString() ;
+			date = date.substring(0, date.indexOf("T")) ;
+			let content = `---
+tags: []
+created: ${date}
+state: open
+omnifocus_id: ${project.id.primaryKey}
+---
+# ${project.name}
+
+[OmniFocus project](omnifocus://task/${ project.id.primaryKey })
+
+`
 			
 			const openURL = "obsidian://open?vault=" + encodeURIComponent(vault) + "&file=" + file ;
 			const newURL  = "obsidian://new?vault="  + encodeURIComponent(vault) + "&file=" + file + "&content=" + encodeURIComponent(content);
