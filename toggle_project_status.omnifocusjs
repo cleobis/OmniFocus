@@ -6,7 +6,8 @@
 	"version": "1.0",
 	"description": "Move projects between active, background, and on hold folders, changing status, but not moving window to new location.",
 	"label": "Toggle project status",
-	"shortLabel": "Toggle status"
+	"shortLabel": "Toggle status",
+	"image": "arrow.up.arrow.down.circle"
 }*/
 (() => {
 	var action = new PlugIn.Action(function(selection, sender){
