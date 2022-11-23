@@ -14,7 +14,7 @@
 	const action = new PlugIn.Action(function(selection, sender){
 		(async() => {
 			// await new Alert("Process Inbox", "Based upon a concept by Scotty Jackson.").show()
-			const taskIDs = inbox.filter(task => !task.completed).map(task => task.id.primaryKey)
+			const taskIDs = inbox.filter(task => !task.completed && task.taskStatus != Task.Status.Dropped).map(task => task.id.primaryKey)
 			const inboxCount = taskIDs.length
 						
 			var masterOperationsList = ["Rename", "Assign to Project", "Assign Tag", "Set Defer Date", "Set Due Date", "Flag/UnFlag", "Add/Edit Note", "Complete", "Drop"]
